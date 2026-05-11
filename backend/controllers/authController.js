@@ -1,5 +1,8 @@
 import User from '../models/User.js';
 import generateToken from '../utils/generatetoken.js';
+import { sendEmail } from '../services/emailService.js';
+import { welcomeEmail, loginAlertEmail } from '../templates/emailTemplates.js';
+import { createAuditLog } from '../utils/auditLogger.js';
 
 export const register = async (req, res) => {
   try {
@@ -22,6 +25,25 @@ export const register = async (req, res) => {
     });
 
     if (user) {
+      // Send welcome email (fire-and-forget — don't block response)
+      sendEmail(
+        user.email,
+        '🎉 Welcome to ScaleNest!',
+        welcomeEmail(user.name)
+      ).catch((err) => console.error('Welcome email failed:', err.message));
+
+      // Audit log: user created (fire-and-forget)
+      if (user.currentWorkspace) {
+        createAuditLog({
+          userId: user._id,
+          tenantId: user.currentWorkspace,
+          action: 'USER_CREATED',
+          description: `New user "${user.name}" registered`,
+          req,
+          metadata: { email: user.email }
+        });
+      }
+
       res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -48,6 +70,17 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email }).select('+password');
 
     if (user && (await user.matchPassword(password))) {
+      // Audit log: login (fire-and-forget)
+      if (user.currentWorkspace) {
+        createAuditLog({
+          userId: user._id,
+          tenantId: user.currentWorkspace,
+          action: 'LOGIN',
+          description: `User "${user.name}" logged in`,
+          req
+        });
+      }
+
       res.json({
         _id: user._id,
         name: user.name,
