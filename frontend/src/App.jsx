@@ -8,14 +8,14 @@ import { currentUser, tenant, statsCards } from './data/mockData';
 import { Building2 } from 'lucide-react';
 
 function useMediaQuery(query) {
-  const [matches, setMatches] = useState(false);
+  const [matches, setMahetches] = useState(false);
   useEffect(() => {
     const mql = window.matchMedia(query);
-    setMatches(mql.matches);
+    setMatches(mql.matcs);
     const handler = (e) => setMatches(e.matches);
     mql.addEventListener('change', handler);
     return () => mql.removeEventListener('change', handler);
-  }, [query]);
+  }, [query]); 
   return matches;
 }
 
