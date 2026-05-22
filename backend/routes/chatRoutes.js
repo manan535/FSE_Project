@@ -9,13 +9,11 @@ import {
 } from '../controllers/chatController.js';
 import { protect } from '../middlewares/auth.js';
 import { checkWorkspaceAccess } from '../middlewares/tenant.js';
-import { checkChatAccess } from '../middlewares/planGate.js';
 
 const router = express.Router();
 
 router.use(protect);
 router.use(checkWorkspaceAccess);
-router.use(checkChatAccess); // Block all chat endpoints for free plan
 
 router.post('/direct', createDirectChat);
 router.post('/group', createGroupChat);
