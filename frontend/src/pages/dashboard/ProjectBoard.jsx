@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaArrowLeft, FaPlus, FaUserPlus, FaUsers } from 'react-icons/fa';
+import { FaArrowLeft, FaPlus, FaUserPlus, FaUsers, FaComments } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 import KanbanBoard from '../../components/kanban/KanbanBoard';
 import TaskModal from '../../components/kanban/TaskModal';
 import InviteMemberModal from '../../components/project/InviteMemberModal';
@@ -10,6 +11,7 @@ import UserAvatar from '../../components/common/UserAvatar';
 import useProjectStore from '../../store/projectStore';
 import useTaskStore from '../../store/taskStore';
 import useMemberStore from '../../store/memberStore';
+import useChatStore from '../../store/chatStore';
 import { useWorkspace } from '../../context/WorkspaceContext';
 
 const ProjectBoard = () => {
@@ -19,7 +21,9 @@ const ProjectBoard = () => {
   const { currentProject, fetchProject, loading: projectLoading } = useProjectStore();
   const { tasks, fetchTasks, loading: tasksLoading, openTaskModal } = useTaskStore();
   const { fetchMembers } = useMemberStore();
+  const { createGroupFromProject } = useChatStore();
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [creatingChat, setCreatingChat] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -129,6 +133,31 @@ const ProjectBoard = () => {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-300 text-sm font-medium hover:border-violet-500/50 hover:text-violet-300 transition-all"
             >
               <FaUserPlus className="text-xs" /> Invite
+            </button>
+
+            <button
+              onClick={async () => {
+                if (!id || creatingChat) return;
+                setCreatingChat(true);
+                try {
+                  const chat = await createGroupFromProject(id);
+                  navigate(`/dashboard/chats/${chat._id}`);
+                } catch (err) {
+                  const code = err.response?.data?.code;
+                  const msg = err.response?.data?.message || 'Failed to create group chat';
+                  if (code === 'CHAT_ACCESS_DENIED') {
+                    toast.error(msg, { duration: 6000, icon: '🔒' });
+                  } else {
+                    toast.error(msg);
+                  }
+                } finally {
+                  setCreatingChat(false);
+                }
+              }}
+              disabled={creatingChat}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm font-medium hover:bg-emerald-500/20 hover:border-emerald-400/50 transition-all disabled:opacity-50"
+            >
+              <FaComments className="text-xs" /> {creatingChat ? 'Creating...' : 'Group Chat'}
             </button>
 
             <button

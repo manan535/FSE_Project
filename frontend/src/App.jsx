@@ -1,100 +1,106 @@
-import { useState, useEffect } from 'react';
-import Sidebar from './components/Sidebar';
-import Navbar from './components/Navbar';
-import StatsCard from './components/StatsCard';
-import ActivityTable from './components/ActivityTable';
-import UsageChart from './components/UsageChart';
-import { currentUser, tenant, statsCards } from './data/mockData';
-import { Building2 } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { WorkspaceProvider } from './context/WorkspaceContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { SocketProvider } from './context/SocketContext';
+import { Toaster } from 'react-hot-toast';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import DashboardLayout from './components/layout/DashboardLayout';
 
-function useMediaQuery(query) {
-  const [matches, setMahetches] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    setMatches(mql.matcs);
-    const handler = (e) => setMatches(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, [query]); 
-  return matches;
-}
+import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import WorkspaceSetup from './pages/WorkspaceSetup';
 
-export default function App() {
-  const isMobile = !useMediaQuery('(min-width: 1024px)');
-  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return false;
-  });
+import Overview from './pages/dashboard/Overview';
+import Projects from './pages/dashboard/Projects';
+import ProjectBoard from './pages/dashboard/ProjectBoard';
+import Tasks from './pages/dashboard/Tasks';
+import Team from './pages/dashboard/Team';
+import Analytics from './pages/dashboard/Analytics';
+import Settings from './pages/dashboard/Settings';
+import Billing from './pages/dashboard/Billing';
+import AuditLogs from './pages/dashboard/AuditLogs';
+import TenantSettings from './pages/dashboard/TenantSettings';
+import Chat from './pages/dashboard/Chat';
+import InviteAccept from './pages/InviteAccept';
 
-  // Collapse sidebar when switching to mobile
-  useEffect(() => {
-    setSidebarOpen(!isMobile);
-  }, [isMobile]);
-
-  // Apply dark mode class
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-  }, [darkMode]);
-
-  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
-  const toggleDarkMode = () => setDarkMode((prev) => !prev);
-
-  const mainMarginLeft = isMobile ? '0' : sidebarOpen ? '256px' : '80px';
-
+function App() {
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950 transition-colors duration-300">
-      <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} isMobile={isMobile} />
+    <Router>
+      <AuthProvider>
+        <WorkspaceProvider>
+          <NotificationProvider>
+            <SocketProvider>
+              {/* Global toast container */}
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: '#1f2937',
+                    color: '#f9fafb',
+                    borderRadius: '12px',
+                    padding: '14px 20px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                  },
+                  success: {
+                    iconTheme: { primary: '#10b981', secondary: '#f9fafb' },
+                  },
+                  error: {
+                    iconTheme: { primary: '#ef4444', secondary: '#f9fafb' },
+                  },
+                }}
+              />
 
-      {/* Main container */}
-      <div
-        className="min-h-screen sidebar-transition"
-        style={{ marginLeft: mainMarginLeft }}
-      >
-        <Navbar
-          onMenuToggle={toggleSidebar}
-          darkMode={darkMode}
-          onToggleDarkMode={toggleDarkMode}
-        />
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route
+                  path="/workspace-setup"
+                  element={
+                    <ProtectedRoute>
+                      <WorkspaceSetup />
+                    </ProtectedRoute>
+                  }
+                />
 
-        {/* Page content */}
-        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-          {/* Welcome header */}
-          <div className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-white tracking-tight">
-              Welcome back, {currentUser.name.split(' ')[0]}
-            </h1>
-            <div className="flex items-center gap-2 mt-2">
-              <Building2 className="w-4 h-4 text-surface-400" />
-              <span className="text-sm text-surface-500 dark:text-surface-400">
-                {tenant.name}
-              </span>
-              <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10 px-2 py-0.5 rounded-md">
-                {tenant.plan}
-              </span>
-            </div>
-          </div>
+                {/* Public invite accept page */}
+                <Route path="/invite/:token" element={<InviteAccept />} />
 
-          {/* Stats grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5 mb-8">
-            {statsCards.map((card) => (
-              <StatsCard key={card.id} {...card} />
-            ))}
-          </div>
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<Overview />} />
+                  <Route path="projects" element={<Projects />} />
+                  <Route path="projects/:id" element={<ProjectBoard />} />
+                  <Route path="tasks" element={<Tasks />} />
+                  <Route path="team" element={<Team />} />
+                  <Route path="chats" element={<Chat />} />
+                  <Route path="chats/:chatId" element={<Chat />} />
+                  <Route path="analytics" element={<Analytics />} />
+                  <Route path="activity" element={<AuditLogs />} />
+                  <Route path="branding" element={<TenantSettings />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="billing" element={<Billing />} />
+                </Route>
 
-          {/* Chart + Activity */}
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-5">
-            <div className="xl:col-span-2">
-              <UsageChart />
-            </div>
-            <div className="xl:col-span-3">
-              <ActivityTable />
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </SocketProvider>
+          </NotificationProvider>
+        </WorkspaceProvider>
+      </AuthProvider>
+    </Router>
   );
 }
+
+export default App;

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FaPlus, FaSearch, FaEdit, FaTrash, FaTasks, FaChevronRight, FaEllipsisV, FaUsers, FaFolder, FaProjectDiagram } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaEdit, FaTrash, FaTasks, FaChevronRight, FaEllipsisV, FaUsers, FaFolder, FaProjectDiagram, FaLock } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 import useProjectStore from '../../store/projectStore';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import UserAvatar from '../../components/common/UserAvatar';
@@ -78,7 +79,14 @@ const Projects = () => {
       setShowModal(false);
       setEditingProject(null);
     } catch (error) {
-      console.error('Failed to save project:', error);
+      const code = error.response?.data?.code;
+      const msg = error.response?.data?.message || 'Failed to save project';
+      if (code === 'PROJECT_LIMIT_REACHED') {
+        toast.error(msg, { duration: 6000, icon: '🔒' });
+        setShowModal(false);
+      } else {
+        toast.error(msg);
+      }
     }
   };
 

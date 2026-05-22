@@ -1,80 +1,254 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-@custom-variant dark (&:where(.dark, .dark *));
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
-  --color-surface-50: #f8fafc;
-  --color-surface-100: #f1f5f9;
-  --color-surface-200: #e2e8f0;
-  --color-surface-300: #cbd5e1;
-  --color-surface-400: #94a3b8;
-  --color-surface-500: #64748b;
-  --color-surface-600: #475569;
-  --color-surface-700: #334155;
-  --color-surface-800: #1e293b;
-  --color-surface-900: #0f172a;
-  --color-surface-950: #020617;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
+/* ─── Dynamic Theme Color (overridden by TenantContext at runtime) ──────── */
+:root {
+  --primary-color: #7c3aed;
+  --primary-rgb: 124, 58, 237;
 }
 
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-surface-300) transparent;
-}
-
-.dark * {
-  scrollbar-color: var(--color-surface-700) transparent;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #0a0e1a;
+  color: #e2e8f0;
 }
 
-/* Custom utility for glassy card */
-.glass-card {
-  background: rgba(255, 255, 255, 0.7);
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-primary-700 transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-800 text-gray-200 px-6 py-2.5 rounded-lg font-medium hover:bg-gray-700 transition-colors duration-200 border border-gray-700;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-primary-500 text-primary-400 px-6 py-2.5 rounded-lg font-medium hover:bg-primary-500/10 transition-colors duration-200;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all duration-200;
+  }
+  
+  .card {
+    @apply bg-gray-900/40 backdrop-blur-xl rounded-2xl border border-gray-800/60 p-6 shadow-lg;
+  }
+}
+
+/* Custom scrollbar for Kanban columns */
+.kanban-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+}
+
+.kanban-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.kanban-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.kanban-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 10px;
+}
+
+.kanban-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Smooth drag transitions */
+[data-dnd-dragging="true"] {
+  opacity: 0.5;
+}
+
+/* Glassmorphism utility — dark variant */
+.glass {
+  background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.dark .glass-card {
-  background: rgba(30, 41, 59, 0.7);
-  border: 1px solid rgba(51, 65, 85, 0.4);
+/* Animation for drag-over columns */
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(124, 58, 237, 0.1);
+  }
 }
 
-/* Sidebar transition */
-.sidebar-transition {
-  transition: width 200ms ease, transform 200ms ease;
+.drag-over-pulse {
+  animation: pulse-subtle 1.5s ease-in-out infinite;
 }
 
-/* Loading skeleton animation */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.skeleton {
-  background: linear-gradient(90deg, var(--color-surface-200) 25%, var(--color-surface-100) 50%, var(--color-surface-200) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CHAT SYSTEM STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Chat scrollbar */
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
 }
 
-.dark .skeleton {
-  background: linear-gradient(90deg, var(--color-surface-800) 25%, var(--color-surface-700) 50%, var(--color-surface-800) 75%);
-  background-size: 200% 100%;
+.chat-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+/* Typing indicator animation */
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+.typing-dot {
+  animation: typing-bounce 1.4s infinite ease-in-out;
+}
+
+/* Unread badge pulse */
+@keyframes unread-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(124, 58, 237, 0); }
+}
+
+.unread-badge {
+  animation: unread-pulse 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   NOTIFICATION SYSTEM STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Notification badge pulse animation */
+@keyframes notification-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+}
+
+.notification-badge-pulse {
+  animation: notification-pulse 2s ease-in-out infinite;
+}
+
+/* Notification panel scrollbar */
+.notification-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+
+.notification-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.notification-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notification-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+}
+
+.notification-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}
+
+/* Danger alert card glow */
+@keyframes glow-red {
+  0%, 100% {
+    box-shadow: 0 0 15px -3px rgba(239, 68, 68, 0.1),
+                0 0 6px -2px rgba(239, 68, 68, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 25px -3px rgba(239, 68, 68, 0.2),
+                0 0 10px -2px rgba(239, 68, 68, 0.1);
+  }
+}
+
+.alert-card-danger {
+  animation: glow-red 3s ease-in-out infinite;
+}
+
+/* Warning alert card glow */
+@keyframes glow-amber {
+  0%, 100% {
+    box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.1),
+                0 0 6px -2px rgba(245, 158, 11, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 25px -3px rgba(245, 158, 11, 0.18),
+                0 0 10px -2px rgba(245, 158, 11, 0.08);
+  }
+}
+
+.alert-card-warning {
+  animation: glow-amber 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   AUDIT LOG TABLE STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.audit-table-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+
+.audit-table-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+
+.audit-table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.audit-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+}
+
+.audit-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
 }

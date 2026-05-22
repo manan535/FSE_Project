@@ -1,19 +1,35 @@
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 import {
-  FaHome, FaProjectDiagram, FaTasks, FaUsers, FaChartBar,
-  FaCog, FaCreditCard, FaChevronLeft, FaChevronRight, FaPalette, FaHistory
+  FaHome, FaProjectDiagram, FaTasks, FaUsers, FaComments, FaChartBar,
+  FaCog, FaCreditCard, FaChevronLeft, FaChevronRight, FaPalette, FaHistory, FaLock
 } from 'react-icons/fa';
 import { useTenant } from '../../context/TenantContext';
+import useChatStore from '../../store/chatStore';
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
   const { tenantName, logo, themeColor } = useTenant();
+  const totalUnread = useChatStore(state => state.getTotalUnread());
+  const [chatLocked, setChatLocked] = useState(false);
+
+  useEffect(() => {
+    const checkChat = async () => {
+      try {
+        const { data } = await axios.get('/api/billing/info');
+        setChatLocked(!data.chatEnabled);
+      } catch { setChatLocked(true); }
+    };
+    checkChat();
+  }, []);
 
   const menuItems = [
     { path: '/dashboard', icon: FaHome, label: 'Dashboard' },
     { path: '/dashboard/projects', icon: FaProjectDiagram, label: 'Projects' },
     { path: '/dashboard/tasks', icon: FaTasks, label: 'Tasks' },
     { path: '/dashboard/team', icon: FaUsers, label: 'Team' },
+    { path: '/dashboard/chats', icon: FaComments, label: 'Chats', badge: chatLocked ? 0 : totalUnread, locked: chatLocked },
     { path: '/dashboard/analytics', icon: FaChartBar, label: 'Analytics' },
     { path: '/dashboard/activity', icon: FaHistory, label: 'Activity' },
     { path: '/dashboard/branding', icon: FaPalette, label: 'Branding' },
@@ -32,44 +48,26 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     >
       <div className="p-6 flex items-center justify-between border-b border-gray-800">
         {!collapsed && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex items-center gap-3 min-w-0"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-3 min-w-0">
             {logoUrl ? (
               <img src={logoUrl} alt="Logo" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
             ) : (
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                style={{ backgroundColor: color }}
-              >
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0" style={{ backgroundColor: color }}>
                 {(tenantName || 'S').charAt(0).toUpperCase()}
               </div>
             )}
             <div className="min-w-0">
-              <h1 className="text-base font-bold truncate leading-tight">
-                {tenantName || 'ScaleNest'}
-              </h1>
+              <h1 className="text-base font-bold truncate leading-tight">{tenantName || 'ScaleNest'}</h1>
             </div>
           </motion.div>
         )}
-        {collapsed && logoUrl && (
-          <img src={logoUrl} alt="Logo" className="w-8 h-8 rounded-lg object-cover mx-auto" />
-        )}
+        {collapsed && logoUrl && <img src={logoUrl} alt="Logo" className="w-8 h-8 rounded-lg object-cover mx-auto" />}
         {collapsed && !logoUrl && (
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm mx-auto"
-            style={{ backgroundColor: color }}
-          >
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm mx-auto" style={{ backgroundColor: color }}>
             {(tenantName || 'S').charAt(0).toUpperCase()}
           </div>
         )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-2 rounded-lg hover:bg-gray-800 transition-colors flex-shrink-0"
-        >
+        <button onClick={() => setCollapsed(!collapsed)} className="p-2 rounded-lg hover:bg-gray-800 transition-colors flex-shrink-0">
           {collapsed ? <FaChevronRight /> : <FaChevronLeft />}
         </button>
       </div>
@@ -82,7 +80,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                 to={item.path}
                 end={item.path === '/dashboard'}
                 className={({ isActive }) =>
-                  `flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${isActive
+                  `flex items-center gap-4 px-4 py-3 rounded-lg transition-colors relative ${isActive
                     ? 'text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                   }`
@@ -91,14 +89,21 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
               >
                 <item.icon className="text-xl flex-shrink-0" />
                 {!collapsed && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="font-medium"
-                  >
+                  <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="font-medium">
                     {item.label}
                   </motion.span>
+                )}
+                {/* Lock icon for chat when on free plan */}
+                {item.locked && (
+                  <span className={`absolute ${collapsed ? 'right-1 top-1' : 'right-3 top-1/2 -translate-y-1/2'}`}>
+                    <FaLock className="text-[10px] text-amber-500/70" />
+                  </span>
+                )}
+                {/* Unread badge */}
+                {!item.locked && item.badge > 0 && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
                 )}
               </NavLink>
             </li>
@@ -108,19 +113,10 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
 
       <div className="p-4 border-t border-gray-800">
         {!collapsed && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-gray-800 rounded-lg p-4"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-gray-800 rounded-lg p-4">
             <p className="text-sm font-medium mb-2">Need help?</p>
             <p className="text-xs text-gray-400 mb-3">Check our documentation</p>
-            <button
-              className="w-full text-white text-sm py-2 rounded-lg transition-colors"
-              style={{ backgroundColor: color }}
-            >
-              View Docs
-            </button>
+            <button className="w-full text-white text-sm py-2 rounded-lg transition-colors" style={{ backgroundColor: color }}>View Docs</button>
           </motion.div>
         )}
       </div>

@@ -1,60 +1,45 @@
 import mongoose from 'mongoose';
 
-const invoiceSchema = new mongoose.Schema(
-  {
-    workspace: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Workspace',
-      required: true,
-    },
-    subscription: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Subscription',
-      default: null,
-    },
-    invoiceNumber: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    amount: {
-      type: Number,
-      required: true,
-    },
-    currency: {
-      type: String,
-      default: 'USD',
-    },
-    status: {
-      type: String,
-      enum: ['paid', 'pending', 'failed', 'refunded'],
-      default: 'pending',
-    },
-    billingDate: {
-      type: Date,
-      default: Date.now,
-    },
-    paidAt: {
-      type: Date,
-      default: null,
-    },
-    description: {
-      type: String,
-      default: '',
-    },
+const invoiceSchema = new mongoose.Schema({
+  workspace: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Workspace',
+    required: true
   },
-  {
-    timestamps: true,
+  invoiceId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  plan: {
+    type: String,
+    enum: ['free', 'pro', 'pro_plus', 'super_pro_max'],
+    required: true
+  },
+  amount: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  currency: {
+    type: String,
+    default: 'USD'
+  },
+  status: {
+    type: String,
+    enum: ['paid', 'unpaid', 'refunded'],
+    default: 'paid'
+  },
+  description: {
+    type: String,
+    default: ''
+  },
+  period: {
+    start: { type: Date },
+    end: { type: Date }
   }
-);
-
-// Auto-generate invoice number before saving
-invoiceSchema.pre('save', async function (next) {
-  if (!this.invoiceNumber) {
-    const count = await mongoose.model('Invoice').countDocuments();
-    this.invoiceNumber = `INV-${String(count + 1).padStart(4, '0')}`;
-  }
-  next();
+}, {
+  timestamps: true
 });
 
 export default mongoose.model('Invoice', invoiceSchema);
