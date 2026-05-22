@@ -23,8 +23,16 @@ const workspaceSchema = new mongoose.Schema({
   },
   plan: {
     type: String,
-    enum: ['free', 'monthly', 'quarterly', 'yearly'],
+    enum: ['free', 'pro', 'pro_plus', 'super_pro_max'],
     default: 'free'
+  },
+  planStartDate: {
+    type: Date,
+    default: null
+  },
+  planEndDate: {
+    type: Date,
+    default: null
   },
   settings: {
     allowInvites: {
@@ -33,7 +41,7 @@ const workspaceSchema = new mongoose.Schema({
     },
     maxMembers: {
       type: Number,
-      default: 10
+      default: 5
     }
   },
   // ─── Branding / Tenant fields ──────────────────────────────────────────────
