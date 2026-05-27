@@ -1,4 +1,4 @@
-# Modern Multi-Tenant ScaleNest
+# ScaleNest: Modern Multi-Tenant 
 
 A complete, production-ready multi-tenant ScaleNest built with the MERN stack (MongoDB, Express, React, Node.js) featuring authentication, workspace management, and a modern dashboard.
 
