@@ -72,7 +72,9 @@ const taskSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+}, {
+  timestamps: true
+});
 
 taskSchema.index({ workspace: 1 });
 taskSchema.index({ project: 1 });

@@ -1,30 +1,13 @@
 import express from 'express';
-import {
-  getPlans,
-  getCurrentSubscription,
-  createSubscription,
-  cancelSubscription,
-  getInvoices,
-  getUsage,
-} from '../controllers/billingController.js';
+import { getBillingInfo, upgradePlan, getInvoices, downloadInvoice, getUsageStats } from '../controllers/billingController.js';
 import { protect } from '../middlewares/auth.js';
-import { checkWorkspaceAccess } from '../middlewares/tenant.js';
 
 const router = express.Router();
 
-// All billing routes require authentication
-router.use(protect);
-
-// Plans can be viewed without workspace context
-router.get('/plans', getPlans);
-
-// Workspace-scoped routes
-router.use(checkWorkspaceAccess);
-
-router.get('/subscription', getCurrentSubscription);
-router.post('/subscription', createSubscription);
-router.delete('/subscription', cancelSubscription);
-router.get('/invoices', getInvoices);
-router.get('/usage', getUsage);
+router.get('/info', protect, getBillingInfo);
+router.post('/upgrade', protect, upgradePlan);
+router.get('/usage', protect, getUsageStats);
+router.get('/invoices', protect, getInvoices);
+router.get('/invoices/:invoiceId/download', protect, downloadInvoice);
 
 export default router;

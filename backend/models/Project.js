@@ -60,10 +60,48 @@ const projectSchema = new mongoose.Schema(
       type: Date,
     },
   },
-  {
-    timestamps: true,
+  description: {
+    type: String,
+    default: ''
+  },
+  workspace: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Workspace',
+    required: true
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['active', 'completed', 'archived'],
+    default: 'active'
+  },
+  priority: {
+    type: String,
+    enum: ['low', 'medium', 'high'],
+    default: 'medium'
+  },
+  color: {
+    type: String,
+    default: '#3B82F6'
+  },
+  members: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  pendingInvites: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ProjectInvitation'
+  }],
+  dueDate: {
+    type: Date
   }
-);
+}, {
+  timestamps: true
+});
 
 projectSchema.index({ workspace: 1 });
 

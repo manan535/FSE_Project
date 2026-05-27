@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaTrash, FaFlag, FaCalendarAlt, FaUsers } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 import useTaskStore from '../../store/taskStore';
 import useProjectStore from '../../store/projectStore';
 import UserAvatar from '../common/UserAvatar';
@@ -79,7 +80,14 @@ const TaskModal = ({ projectId }) => {
         await createTask(taskData);
       }
     } catch (error) {
-      console.error('Task save failed:', error);
+      const code = error.response?.data?.code;
+      const msg = error.response?.data?.message || 'Failed to save task';
+      if (code === 'TASK_LIMIT_REACHED') {
+        toast.error(msg, { duration: 6000, icon: '🔒' });
+        closeTaskModal();
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setSubmitting(false);
     }
